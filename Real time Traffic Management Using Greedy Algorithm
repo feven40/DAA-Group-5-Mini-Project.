@@ -114,3 +114,63 @@ struct Intersection {
                 std::string decisionReason;
 
                 // Determine the actual next green road and the reason
+if (maxQueueFound > 0) {
+                    // A road (potentially different from oldGreenRoadIndex if it looped around)
+                    // was found with the longest queue among those considered.
+                    currentGreenRoadIndex = nextBestCandidateIndex;
+                    decisionReason = "Greedy choice: " + incomingRoads[currentGreenRoadIndex]->name +
+                                     " has longest queue (" + std::to_string(maxQueueFound) + " cars).";
+                } else {
+                    // No other road had a waiting queue (maxQueueFound is 0).
+                    // Check if the road that was just green (oldGreenRoadIndex) still has vehicles.
+                    if (incomingRoads[oldGreenRoadIndex]->hasVehicles()) {
+                        currentGreenRoadIndex = oldGreenRoadIndex; // Continue with the same road
+                        decisionReason = "Continuing with " + incomingRoads[currentGreenRoadIndex]->name +
+                                         " (queue: " + std::to_string(incomingRoads[currentGreenRoadIndex]->queueLength()) +
+                                         ", others empty).";
+                    } else {
+                        // All roads are empty. Cycle to the next one.
+                        currentGreenRoadIndex = (oldGreenRoadIndex + 1) % incomingRoads.size();
+                        decisionReason = "All roads empty, cycling to " + incomingRoads[currentGreenRoadIndex]->name + ".";
+                    }
+                }
+                
+                currentLightState = LightState::GREEN;
+                size_t chosenQueueLen = incomingRoads[currentGreenRoadIndex]->queueLength();
+                phaseTimer = MIN_GREEN_TIME + (chosenQueueLen / 2); // Adaptive green time
+                if (phaseTimer > MAX_GREEN_TIME) phaseTimer = MAX_GREEN_TIME;
+                if (phaseTimer < MIN_GREEN_TIME) phaseTimer = MIN_GREEN_TIME;
+
+                std::cout << "  [Time " << currentTimeStep << "] EVENT: Light for "
+                          << incomingRoads[currentGreenRoadIndex]->name << " changed to GREEN. "
+                          << "REASON: " << decisionReason << " "
+                          << "(Actual Queue: " << chosenQueueLen << ", Set Duration: " << phaseTimer << ")." << std::endl;
+            }
+        }
+    }
+};
+
+class TrafficSimulation {
+public:
+    std::vector<Road> allRoads;
+    std::vector<Intersection> allIntersections;
+    int currentTimeStep = 0;
+    long totalWaitingTime = 0;
+    long totalVehiclesProcessed = 0;
+    // For clearer output, let's buffer events of a step
+    std::vector<std::string> stepEvents;
+
+
+    void setupSingleIntersectionSystem() {
+        allRoads.emplace_back(0, "Northbound");
+        allRoads.emplace_back(1, "Eastbound");
+        allRoads.emplace_back(2, "Southbound");
+        allRoads.emplace_back(3, "Westbound");
+
+        allIntersections.emplace_back(0);
+        Intersection& mainIntersection = allIntersections[0];
+        for(size_t i=0; i < allRoads.size(); ++i) {
+            mainIntersection.addRoad(&allRoads[i]);
+        }
+        mainIntersection.initializeLights(); // Initial light status is printed here
+    }
