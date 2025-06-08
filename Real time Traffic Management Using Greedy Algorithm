@@ -174,3 +174,58 @@ public:
         }
         mainIntersection.initializeLights(); // Initial light status is printed here
     }
+void generateVehicles() {
+        for (Road& road : allRoads) {
+            if (((double)rand() / RAND_MAX) < VEHICLE_ARRIVAL_PROBABILITY) {
+                Vehicle v(currentTimeStep, road.id);
+                road.addVehicle(v);
+                // Buffer event instead of direct print
+                stepEvents.push_back("Vehicle " + std::to_string(v.id) + " arrived at " + road.name + ".");
+            }
+        }
+    }
+
+    void processIntersectionLogic(Intersection& intersection) {
+        // Light phase updates (which print their own events now)
+        intersection.updateLightPhase(currentTimeStep);
+
+        // Vehicle movement
+        if (intersection.currentLightState == LightState::GREEN) {
+            Road* greenRoad = intersection.incomingRoads[intersection.currentGreenRoadIndex];
+            // Allow one car to pass per time step if green (simplified flow rate)
+            // vehiclesPassedThisGreenCycle is now managed by Road or Intersection when light turns yellow
+            if (greenRoad->hasVehicles() && greenRoad->vehiclesPassedThisGreenCycle < 1) { // Limit to 1 car per step for this road
+                Vehicle processedVehicle = greenRoad->processVehicle();
+                totalVehiclesProcessed++;
+                int waitingTime = currentTimeStep - processedVehicle.arrivalTimeStep;
+                totalWaitingTime += waitingTime;
+                stepEvents.push_back("Vehicle " + std::to_string(processedVehicle.id) +
+                                     " from " + greenRoad->name + " passed (Waited: " + std::to_string(waitingTime) + " steps).");
+            }
+        }
+    }
+
+    void printStepSummary() {
+        std::cout << "\n--- Time Step " << currentTimeStep << " ---" << std::endl;
+        
+        // Print buffered events for this step
+        if (!stepEvents.empty()) {
+            std::cout << "  Events this step:" << std::endl;
+            for (const auto& event : stepEvents) {
+                std::cout << "    - " << event << std::endl;
+            }
+        } else {
+            std::cout << "  No new arrivals or departures this step." << std::endl;
+        }
+        stepEvents.clear(); // Clear for next step
+
+        // Print Intersection State
+        std::cout << "  Intersection State:" << std::endl;
+        for(const auto& intersection : allIntersections) { // Though we only have one
+            std::cout << "    Intersection " << intersection.id << ":" << std::endl;
+            for (size_t i = 0; i < intersection.incomingRoads.size(); ++i) {
+                const Road* road = intersection.incomingRoads[i];
+                std::cout << "      - " << road->name << ": Queue [" << road->queueLength() << " cars]. Light: ";
+                if (static_cast<int>(i) == intersection.currentGreenRoadIndex) {
+                    if (intersection.currentLightState == LightState::GREEN) {
+
