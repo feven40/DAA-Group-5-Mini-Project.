@@ -1,0 +1,57 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <string>
+#include <algorithm> // Not strictly needed for this version but often useful
+#include <limits>    // For std::numeric_limits
+#include <stdexcept> // For std::runtime_error
+#include <ctime>     // For time()
+#include <cstdlib>   // For srand() and rand()
+
+// --- Configuration Constants ---
+const int SIMULATION_TIME_STEPS = 50; // Reduced for more readable output initially
+const int MIN_GREEN_TIME = 5;         // Min time a light stays green
+const int MAX_GREEN_TIME = 15;        // Max time a light stays green
+const int YELLOW_TIME = 2;            // Yellow light duration
+const double VEHICLE_ARRIVAL_PROBABILITY = 0.4; // Chance of new vehicle per road per step
+
+// --- Data Structures ---
+int nextVehicleId = 0;
+struct Vehicle {
+    int id;
+    int arrivalTimeStep;
+    int sourceRoadId;
+
+    Vehicle(int time, int roadId) : id(nextVehicleId++), arrivalTimeStep(time), sourceRoadId(roadId) {}
+};
+
+struct Road {
+    int id;
+    std::string name;
+    std::queue<Vehicle> waitingVehicles;
+    int vehiclesPassedThisGreenCycle = 0; // Renamed for clarity, reset when light turns yellow
+
+    Road(int road_id, const std::string& road_name) : id(road_id), name(road_name) {}
+
+    void addVehicle(const Vehicle& v) {
+        waitingVehicles.push(v);
+    }
+
+    bool hasVehicles() const {
+        return !waitingVehicles.empty();
+    }
+
+    size_t queueLength() const {
+        return waitingVehicles.size();
+    }
+
+    Vehicle processVehicle() { // currentTimeStep not needed here anymore
+        if (!waitingVehicles.empty()) {
+            Vehicle v = waitingVehicles.front();
+            waitingVehicles.pop();
+            vehiclesPassedThisGreenCycle++;
+            return v;
+        }
+        throw std::runtime_error("Tried to process vehicle from empty queue");
+    }
+};
