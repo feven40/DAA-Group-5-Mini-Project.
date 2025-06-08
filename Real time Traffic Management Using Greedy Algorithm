@@ -228,4 +228,64 @@ void generateVehicles() {
                 std::cout << "      - " << road->name << ": Queue [" << road->queueLength() << " cars]. Light: ";
                 if (static_cast<int>(i) == intersection.currentGreenRoadIndex) {
                     if (intersection.currentLightState == LightState::GREEN) {
+std::cout << "GREEN (Timer: " << intersection.phaseTimer << ")";
+                    } else { // YELLOW
+                         std::cout << "YELLOW (Timer: " << intersection.phaseTimer << ")";
+                    }
+                } else {
+                    std::cout << "RED";
+                }
+                std::cout << std::endl;
+            }
+        }
+        std::cout << "  ----------------------------------------" << std::endl;
+    }
+
+
+    void runStep() {
+        // Events like light changes are printed directly by updateLightPhase if they occur
+        // Vehicle arrivals and departures will be buffered into stepEvents
+
+        generateVehicles(); // Buffers arrival events
+
+        for (Intersection& intersection : allIntersections) {
+            processIntersectionLogic(intersection); // Light changes print directly, departures buffered
+        }
+        
+        printStepSummary(); // Prints buffered events and current state
+
+        currentTimeStep++;
+    }
+
+    void printStatistics() {
+        std::cout << "\n--- SIMULATION ENDED ---" << std::endl;
+        std::cout << "Total Time Steps Simulated: " << currentTimeStep << std::endl;
+        std::cout << "Total Vehicles Processed: " << totalVehiclesProcessed << std::endl;
+        if (totalVehiclesProcessed > 0) {
+            std::cout << "Average Waiting Time: "
+                      << static_cast<double>(totalWaitingTime) / totalVehiclesProcessed << " steps." << std::endl;
+        } else {
+            std::cout << "No vehicles processed." << std::endl;
+        }
+        std::cout << "Remaining Queues:" << std::endl;
+        for(const auto& road : allRoads){
+            std::cout << "  - " << road.name << ": " << road.queueLength() << " cars." << std::endl;
+        }
+    }
+};
+
+int main() {
+    srand(static_cast<unsigned int>(time(0))); // Seed for random vehicle generation
+
+    TrafficSimulation simulation;
+    simulation.setupSingleIntersectionSystem(); // Prints initial light state
+
+    for (int i = 0; i < SIMULATION_TIME_STEPS; ++i) {
+        simulation.runStep();
+    }
+
+    simulation.printStatistics();
+
+    return 0;
+}
 
