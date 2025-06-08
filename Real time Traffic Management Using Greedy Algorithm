@@ -55,3 +55,62 @@ struct Road {
         throw std::runtime_error("Tried to process vehicle from empty queue");
     }
 };
+enum class LightState { GREEN, YELLOW }; // ALL_RED_TRANSITION was conceptual, not strictly needed as a state
+
+struct Intersection {
+    int id;
+    std::vector<Road*> incomingRoads;
+    int currentGreenRoadIndex = 0;
+    LightState currentLightState = LightState::GREEN;
+    int phaseTimer = 0; // Time remaining for current green/yellow phase
+
+    Intersection(int intersection_id) : id(intersection_id) {}
+
+    void addRoad(Road* road) {
+        incomingRoads.push_back(road);
+    }
+
+    void initializeLights() {
+        if (incomingRoads.empty()) return;
+        currentGreenRoadIndex = 0;
+        currentLightState = LightState::GREEN;
+        phaseTimer = MIN_GREEN_TIME;
+        std::cout << "[Time 0] Intersection " << id << ": Light for "
+                  << incomingRoads[currentGreenRoadIndex]->name << " is GREEN (Duration: " << phaseTimer << ")." << std::endl;
+    }
+
+    void updateLightPhase(int currentTimeStep) {
+        if (incomingRoads.empty()) return;
+
+        phaseTimer--;
+
+        if (phaseTimer <= 0) {
+            Road* previousGreenRoad = incomingRoads[currentGreenRoadIndex];
+
+            if (currentLightState == LightState::GREEN) {
+                currentLightState = LightState::YELLOW;
+                phaseTimer = YELLOW_TIME;
+                previousGreenRoad->vehiclesPassedThisGreenCycle = 0; // Reset counter for this road
+                std::cout << "  [Time " << currentTimeStep << "] EVENT: Light for "
+                          << previousGreenRoad->name << " changed to YELLOW (Duration: " << phaseTimer << ")." << std::endl;
+
+            } else if (currentLightState == LightState::YELLOW) {
+                // GREEDY CHOICE LOGIC for next green light
+                int oldGreenRoadIndex = currentGreenRoadIndex;
+                int nextBestCandidateIndex = oldGreenRoadIndex; // Start with current as a fallback
+                size_t maxQueueFound = 0;
+
+                // Iterate through roads, typically preferring roads other than the current one
+                // to find the longest queue. The loop structure ensures all roads are checked,
+                // starting from the one after the current green, giving others a chance.
+                for (size_t i = 0; i < incomingRoads.size(); ++i) {
+                    int R_idx = (oldGreenRoadIndex + 1 + i) % incomingRoads.size();
+                    if (incomingRoads[R_idx]->queueLength() > maxQueueFound) {
+                        maxQueueFound = incomingRoads[R_idx]->queueLength();
+                        nextBestCandidateIndex = R_idx;
+                    }
+                }
+                
+                std::string decisionReason;
+
+                // Determine the actual next green road and the reason
