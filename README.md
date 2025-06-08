@@ -6,7 +6,7 @@ Group Members                       ID NO
 
 1. Bethelhem Fekadu …………………………………….NSR/183/15
  
-2 Girumnesh kebede ……………………………………NSR/429/15
+2. Girumnesh kebede ……………………………………NSR/429/15
 
 3. Feven Oticho ………………………………………… NSR/391/15
    
