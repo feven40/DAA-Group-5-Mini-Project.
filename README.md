@@ -1,7 +1,7 @@
 # DAA-Group-5-Mini-Project.
 Real-Time Traffic Management Using Greedy Algorithm
 
-<h3>overview <h3>
+# overview 
 
 
 A greedy algorithm could be used to decide which traffic light to change based on current queue lengths. For example, if one road has a significantly longer queue than others, the algorithm could choose to give that road more green light time to minimize waiting time.
