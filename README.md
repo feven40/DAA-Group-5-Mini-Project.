@@ -9,7 +9,7 @@ If vehicles are processed in order of their arrival times or based on their urge
 If vehicles have options for multiple routes, a greedy approach could select the route with the least expected waiting time based on current traffic conditions.
 
 
-Common Data Structures in  Real-Time Traffic  Management  Simulation.
+# Common Data Structures in  Real-Time Traffic  Management  Simulation.
 
 1. Queues:
    • Purpose: To manage vehicles waiting at intersections or on roads.
@@ -30,14 +30,17 @@ Common Data Structures in  Real-Time Traffic  Management  Simulation.
    • Effectiveness: Hash maps allow average-case O(1) time complexity for lookups, making them effective for dynamic data where quick access is needed.
 
 
-Effectiveness of Algorithm
+# Effectiveness of Algorithm
 
  
- Greedy Algorithm
+Greedy Algorithm
    
    • Greedy algorithms can be applied to manage traffic light changes or vehicle processing based on current conditions (e.g., longest queue first).
    • Effectiveness: Greedy algorithms can be effective in scenarios where local optimal choices lead to acceptable global outcomes. However, they may not always yield the best overall solution (e.g., they might overlook longer-term traffic patterns).
 • Greedy algorithms can offer quick solutions but may require careful consideration to avoid suboptimal outcomes.
+
+
+
 
 
 
